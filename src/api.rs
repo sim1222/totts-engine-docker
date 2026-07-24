@@ -65,19 +65,15 @@ pub struct VoiceQuery {
     gender: Option<Gender>,
 }
 
-#[derive(Serialize)]
-pub struct VoicesResponse {
-    voices: Vec<crate::config::Voice>,
-}
-
 pub async fn voices(
     State(state): State<AppState>,
     Extension(RequestId(request_id)): Extension<RequestId>,
     query: Result<Query<VoiceQuery>, QueryRejection>,
-) -> Result<Json<VoicesResponse>, ApiError> {
+) -> Result<Json<Vec<crate::config::Voice>>, ApiError> {
     let Query(query) = query.map_err(|error| {
         ApiError::new(ApiErrorKind::InvalidBody, request_id).detail(error.to_string())
     })?;
+
     let filtered: Vec<_> = state
         .voices
         .voices
@@ -94,7 +90,8 @@ pub async fn voices(
         })
         .cloned()
         .collect();
-    Ok(Json(VoicesResponse { voices: filtered }))
+
+    Ok(Json(filtered))
 }
 
 #[derive(Debug, Deserialize)]
@@ -103,11 +100,11 @@ pub struct TtsRequest {
     text: String,
     voice_id: String,
     #[serde(default = "default_one")]
-    volume: f64,
+    audio_volume: f64,
     #[serde(default = "default_one")]
-    rate: f64,
+    speaking_rate: f64,
     #[serde(default = "default_one")]
-    pitch: f64,
+    audio_pitch: f64,
     #[serde(default = "default_format")]
     format: String,
 }
@@ -150,9 +147,9 @@ pub async fn tts(
         .synthesize(
             voice,
             &request.text,
-            request.volume,
-            request.rate,
-            request.pitch,
+            request.audio_volume,
+            request.speaking_rate,
+            request.audio_pitch,
         )
         .await;
     let audio = match result {
@@ -189,9 +186,9 @@ fn validate(request: &TtsRequest, request_id: Uuid) -> Result<(), ApiError> {
         )
         .detail("text must contain between 1 and 2000 characters"));
     }
-    validate_range("volume", request.volume, 0.0, 1.0, request_id)?;
-    validate_range("rate", request.rate, 0.5, 6.0, request_id)?;
-    validate_range("pitch", request.pitch, 0.0, 2.0, request_id)?;
+    validate_range("audio_volume", request.audio_volume, 0.0, 1.0, request_id)?;
+    validate_range("speaking_rate", request.speaking_rate, 0.5, 6.0, request_id)?;
+    validate_range("audio_pitch", request.audio_pitch, 0.0, 2.0, request_id)?;
     if request.format != "wav" {
         return Err(ApiError::new(
             ApiErrorKind::InvalidParameter("format".to_owned()),
@@ -265,14 +262,14 @@ mod tests {
         let valid = TtsRequest {
             text: "あ".repeat(2000),
             voice_id: "ja".to_owned(),
-            volume: 1.0,
-            rate: 1.0,
-            pitch: 1.0,
+            audio_volume: 1.0,
+            speaking_rate: 1.0,
+            audio_pitch: 1.0,
             format: "wav".to_owned(),
         };
         assert!(validate(&valid, id).is_ok());
         let invalid = TtsRequest {
-            rate: 99.0,
+            speaking_rate: 99.0,
             ..valid
         };
         assert!(matches!(

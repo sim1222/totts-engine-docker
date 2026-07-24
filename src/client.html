@@ -190,14 +190,14 @@
           if (!response.ok) throw new Error(await errorMessage(response));
           const body = await response.json();
           voice.replaceChildren();
-          for (const item of body.voices) {
+          for (const item of body) {
             const option = document.createElement("option");
             option.value = item.id;
             option.textContent = `${item.display_name} (${item.language} / ${item.gender})`;
             option.title = item.description || "";
             voice.append(option);
           }
-          if (!body.voices.length) {
+          if (!body.length) {
             voice.innerHTML = '<option value="">利用できる音声がありません</option>';
             showStatus("利用できる音声がありません。", "error");
             return;
@@ -247,9 +247,9 @@
             body: JSON.stringify({
               text: text.value,
               voice_id: voice.value,
-              volume: Number(document.querySelector("#volume").value),
-              rate: Number(document.querySelector("#rate").value),
-              pitch: Number(document.querySelector("#pitch").value),
+              audio_volume: Number(document.querySelector("#volume").value),
+              speaking_rate: Number(document.querySelector("#rate").value),
+              audio_pitch: Number(document.querySelector("#pitch").value),
               format: "wav"
             })
           });
