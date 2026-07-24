@@ -49,7 +49,7 @@ extern "C" int main(int argc, char **argv) {
   // lang, country, variant, voice, rate, pitch, volume, output, config, license,
   // preference
   if (argc != 12) {
-    return 64;
+    return 63;
   }
 
   static char text[16385];
@@ -57,7 +57,7 @@ extern "C" int main(int argc, char **argv) {
   while (used < sizeof(text) - 1) {
     int count = read(0, text + used, sizeof(text) - 1 - used);
     if (count < 0) {
-      return 65;
+      return 64;
     }
     if (count == 0) {
       break;

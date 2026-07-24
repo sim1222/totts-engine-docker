@@ -124,18 +124,29 @@ pub enum TextEncoding {
 }
 
 impl TextEncoding {
-    pub fn encode(self, text: &str) -> Result<Vec<u8>> {
+    pub fn encode_lossy(self, text: &str) -> Option<Vec<u8>> {
         let encoding = match self {
-            Self::Utf8 => return Ok(text.as_bytes().to_vec()),
+            Self::Utf8 => return Some(text.as_bytes().to_vec()),
             Self::Cp932 => encoding_rs::SHIFT_JIS,
             Self::Gbk => encoding_rs::GBK,
             Self::EucKr => encoding_rs::EUC_KR,
         };
-        let (output, _, had_errors) = encoding.encode(text);
-        if had_errors {
-            bail!("text contains characters unsupported by the selected voice encoding");
+
+        let encodable_text = text
+            .chars()
+            .filter(|c| {
+                let (_, _, error) = encoding.encode(&c.to_string());
+                !error
+            })
+            .collect::<String>();
+
+        let (output, _, _) = encoding.encode(&encodable_text);
+
+        if output.is_empty() {
+            None
+        } else {
+            Some(output.into_owned())
         }
-        Ok(output.into_owned())
     }
 }
 
@@ -163,7 +174,7 @@ mod tests {
         let encoded = config.voices[0]
             .engine
             .encoding
-            .encode("テスト")
+            .encode_lossy("テスト")
             .expect("CP932 test text should encode");
         assert_eq!(encoded, vec![0x83, 0x65, 0x83, 0x58, 0x83, 0x67]);
     }

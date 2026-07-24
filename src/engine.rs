@@ -2,12 +2,12 @@ use std::{
     io::Cursor,
     process::Stdio,
     sync::{
-        atomic::{AtomicBool, AtomicUsize, Ordering},
         Arc,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
     },
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use hound::{SampleFormat, WavSpec, WavWriter};
 use tokio::{
     fs,
@@ -19,6 +19,8 @@ use tokio::{
 use tracing::{error, warn};
 
 use crate::config::{AppConfig, Voice, VoicesConfig};
+
+pub static EMPTY_WAVE: [u8; 44] = [0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, 0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20, 0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x44, 0xac, 0x00, 0x00, 0x88, 0x58, 0x01, 0x00, 0x02, 0x00, 0x10, 0x00, 0x64, 0x61, 0x74, 0x61, 0x00, 0x00, 0x00, 0x00];
 
 pub struct Engine {
     config: Arc<AppConfig>,
@@ -117,11 +119,11 @@ impl Engine {
             .context("create request work directory")
             .map_err(RunFailure::Failed)?;
         let pcm_path = work.path().join("output.pcm");
-        let input = voice
-            .engine
-            .encoding
-            .encode(text)
-            .map_err(RunFailure::Failed)?;
+
+        let input = voice.engine.encoding.encode_lossy(text);
+        let Some(input) = input else {
+            return Ok(EMPTY_WAVE.to_vec());
+        };
         let native_volume = map_volume(volume).to_string();
         let native_rate = map_rate(rate).to_string();
         let native_pitch = map_pitch(pitch).to_string();
