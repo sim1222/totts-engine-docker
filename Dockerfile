@@ -1,11 +1,11 @@
-FROM rust:1.97.1-bookworm AS rust-builder
+FROM rust:1.97.1-trixie AS rust-builder
 WORKDIR /build
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && printf 'fn main() {}\n' > src/main.rs && cargo build --release && rm -rf src
 COPY src ./src
 RUN touch src/main.rs && cargo build --release
 
-FROM debian:bookworm-slim AS harness-builder
+FROM debian:trixie-slim AS harness-builder
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        gcc-arm-linux-gnueabi g++-arm-linux-gnueabi make \
@@ -30,9 +30,9 @@ RUN mkdir -p stub-root/system/lib \
     && cp libTtsToSpeakG3V1_JP.so libc.so libdl.so libm.so libstdc++.so stub-root/system/lib/ \
     && make ROOTFS=/build/stub-root all
 
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim AS runtime
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends qemu-user-static sox curl ca-certificates \
+    && apt-get install -y --no-install-recommends qemu-user-static \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 tts \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin tts
