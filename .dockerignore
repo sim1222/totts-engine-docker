@@ -1,0 +1,12 @@
+rootfs
+analysis
+BZ501-times2024v2.img
+*.img
+.env
+target
+.git
+core
+core.*
+harness/*.o
+harness/tts-harness
+harness/liblog_stub.so

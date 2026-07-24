@@ -1,0 +1,45 @@
+voices:
+  - id: female01
+    display_name: ToSpeak Japanese Female
+    language: ja-JP
+    gender: female
+    description: Japanese female voice from jaJP_voiceDic_FS_FKN000H7.dicL
+    engine:
+      language: jpn
+      country: JPN
+      variant: ""
+      voice_id: female01
+      encoding: cp932
+  - id: female01enus
+    display_name: ToSpeak US English Female
+    language: en-US
+    gender: female
+    description: US English female voice from enUS_voiceDic_FS_FLH000H2.dicL
+    engine:
+      language: eng
+      country: USA
+      variant: ""
+      voice_id: female01enus
+      encoding: utf8
+  - id: female01zhcn
+    display_name: ToSpeak Chinese Female
+    language: zh-CN
+    gender: female
+    description: Chinese female voice from zhCN_voiceDic_FS_FLY000H3.dicL
+    engine:
+      language: zho
+      country: CHN
+      variant: ""
+      voice_id: female01zhcn
+      encoding: gbk
+  - id: female01kokr
+    display_name: ToSpeak Korean Female
+    language: ko-KR
+    gender: female
+    description: Korean female voice from koKR_voiceDic_FS_FEC000H2.dicL
+    engine:
+      language: kor
+      country: KOR
+      variant: ""
+      voice_id: female01kokr
+      encoding: euckr

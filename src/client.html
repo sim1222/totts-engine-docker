@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ToSpeak TTS Client</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #17211d;
+      background: #eef2ed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 18px;
+      background:
+        radial-gradient(circle at 10% 5%, #d8eadc 0, transparent 34rem),
+        linear-gradient(145deg, #f7f4ec, #e9efea);
+    }
+    main { width: min(720px, 100%); margin: 0 auto; }
+    header { margin-bottom: 22px; }
+    h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.5rem); letter-spacing: -.04em; }
+    header p { margin: 7px 0 0; color: #65706b; }
+    .card {
+      padding: clamp(20px, 5vw, 32px);
+      border: 1px solid rgba(42, 68, 54, .12);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, .86);
+      box-shadow: 0 18px 50px rgba(41, 60, 50, .10);
+      backdrop-filter: blur(12px);
+    }
+    .field { margin-bottom: 20px; }
+    label, .label-row { display: block; margin-bottom: 8px; font-size: .87rem; font-weight: 700; }
+    .label-row { display: flex; justify-content: space-between; }
+    .value { color: #397353; font-variant-numeric: tabular-nums; }
+    input, select, textarea, button, audio { width: 100%; font: inherit; }
+    input[type="password"], select, textarea {
+      border: 1px solid #ccd5cf;
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: inherit;
+      background: #fff;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #397353;
+      box-shadow: 0 0 0 3px rgba(57, 115, 83, .13);
+    }
+    textarea { min-height: 145px; resize: vertical; line-height: 1.7; }
+    .text-meta { display: flex; justify-content: flex-end; margin-top: 6px; color: #77817c; font-size: .78rem; }
+    .sliders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    input[type="range"] { accent-color: #397353; }
+    button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 13px;
+      padding: 12px 18px;
+      cursor: pointer;
+      color: #fff;
+      background: #245f40;
+      font-weight: 800;
+      transition: transform .12s, background .15s, opacity .15s;
+    }
+    button:hover:not(:disabled) { background: #194d32; transform: translateY(-1px); }
+    button:disabled { cursor: wait; opacity: .55; }
+    .status {
+      display: none;
+      margin-top: 16px;
+      padding: 11px 13px;
+      border-radius: 10px;
+      font-size: .86rem;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+    .status.show { display: block; }
+    .status.info { color: #28553e; background: #e3f1e8; }
+    .status.error { color: #8b2e2e; background: #fbe8e6; }
+    .result { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e5e1; }
+    .result.show { display: block; }
+    .result-actions { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .download { color: #245f40; font-weight: 700; white-space: nowrap; }
+    .hint { margin: 16px 0 0; color: #7a827e; font-size: .78rem; text-align: center; }
+    @media (max-width: 580px) {
+      body { padding: 20px 12px; }
+      .sliders { grid-template-columns: 1fr; gap: 12px; }
+      .result-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>ToSpeak TTS</h1>
+      <p>テキストからWAV音声を生成します。</p>
+    </header>
+
+    <form class="card" id="tts-form">
+      <div class="field">
+        <label for="token">APIトークン</label>
+        <input id="token" type="password" placeholder="TTS_API_TOKEN" autocomplete="off" required>
+      </div>
+
+      <div class="field">
+        <label for="voice">音声</label>
+        <select id="voice" required disabled>
+          <option value="">トークンを入力すると読み込みます</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="label-row"><label for="text">テキスト</label><span class="value" id="text-count">0 / 2000</span></div>
+        <textarea id="text" maxlength="2000" placeholder="読み上げる文章を入力してください。" required></textarea>
+      </div>
+
+      <div class="field sliders">
+        <div>
+          <div class="label-row"><label for="volume">音量</label><output class="value" id="volume-value">1.0</output></div>
+          <input id="volume" type="range" min="0" max="1" step="0.1" value="1">
+        </div>
+        <div>
+          <div class="label-row"><label for="rate">速度</label><output class="value" id="rate-value">1.0</output></div>
+          <input id="rate" type="range" min="0.5" max="6" step="0.1" value="1">
+        </div>
+        <div>
+          <div class="label-row"><label for="pitch">高さ</label><output class="value" id="pitch-value">1.0</output></div>
+          <input id="pitch" type="range" min="0" max="2" step="0.1" value="1">
+        </div>
+      </div>
+
+      <button id="submit" type="submit">音声を生成</button>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+
+      <div class="result" id="result">
+        <div class="result-actions">
+          <audio id="audio" controls></audio>
+          <a class="download" id="download" download="speech.wav">WAVを保存</a>
+        </div>
+      </div>
+      <p class="hint">トークンは保存されず、このページを閉じると破棄されます。</p>
+    </form>
+  </main>
+
+  <script>
+    (() => {
+      const apiBase = location.protocol === "file:" ? "http://localhost:8080" : location.origin;
+      const form = document.querySelector("#tts-form");
+      const token = document.querySelector("#token");
+      const voice = document.querySelector("#voice");
+      const text = document.querySelector("#text");
+      const submit = document.querySelector("#submit");
+      const status = document.querySelector("#status");
+      const result = document.querySelector("#result");
+      const audio = document.querySelector("#audio");
+      const download = document.querySelector("#download");
+      let audioUrl = null;
+      let voiceTimer = null;
+
+      const showStatus = (message, type = "info") => {
+        status.textContent = message;
+        status.className = `status show ${type}`;
+      };
+
+      const errorMessage = async (response) => {
+        try {
+          const body = await response.json();
+          const error = body.error || {};
+          return [error.message, error.param && `項目: ${error.param}`, error.request_id && `ID: ${error.request_id}`]
+            .filter(Boolean).join(" / ");
+        } catch (_) {
+          return `HTTP ${response.status} ${response.statusText}`;
+        }
+      };
+
+      const loadVoices = async () => {
+        const apiToken = token.value.trim();
+        if (!apiToken) {
+          voice.disabled = true;
+          voice.innerHTML = '<option value="">トークンを入力すると読み込みます</option>';
+          return;
+        }
+
+        voice.disabled = true;
+        voice.innerHTML = '<option value="">音声を読み込み中...</option>';
+        try {
+          const response = await fetch(`${apiBase}/voices`, {
+            headers: { Authorization: `Bearer ${apiToken}` }
+          });
+          if (!response.ok) throw new Error(await errorMessage(response));
+          const body = await response.json();
+          voice.replaceChildren();
+          for (const item of body.voices) {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = `${item.display_name} (${item.language} / ${item.gender})`;
+            option.title = item.description || "";
+            voice.append(option);
+          }
+          if (!body.voices.length) {
+            voice.innerHTML = '<option value="">利用できる音声がありません</option>';
+            showStatus("利用できる音声がありません。", "error");
+            return;
+          }
+          voice.disabled = false;
+          status.className = "status";
+        } catch (error) {
+          voice.innerHTML = '<option value="">音声を取得できませんでした</option>';
+          showStatus(`音声一覧の取得に失敗しました: ${error.message}`, "error");
+        }
+      };
+
+      token.addEventListener("input", () => {
+        clearTimeout(voiceTimer);
+        voiceTimer = setTimeout(loadVoices, 450);
+      });
+
+      text.addEventListener("input", () => {
+        document.querySelector("#text-count").textContent = `${[...text.value].length} / 2000`;
+      });
+
+      for (const name of ["volume", "rate", "pitch"]) {
+        const input = document.querySelector(`#${name}`);
+        const output = document.querySelector(`#${name}-value`);
+        input.addEventListener("input", () => { output.value = Number(input.value).toFixed(1); });
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (voice.disabled || !voice.value) {
+          showStatus("音声を選択してください。", "error");
+          return;
+        }
+
+        submit.disabled = true;
+        submit.textContent = "生成中...";
+        result.classList.remove("show");
+        showStatus("音声を生成しています。", "info");
+
+        try {
+          const response = await fetch(`${apiBase}/tts`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token.value.trim()}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              text: text.value,
+              voice_id: voice.value,
+              volume: Number(document.querySelector("#volume").value),
+              rate: Number(document.querySelector("#rate").value),
+              pitch: Number(document.querySelector("#pitch").value),
+              format: "wav"
+            })
+          });
+          if (!response.ok) throw new Error(await errorMessage(response));
+
+          const blob = await response.blob();
+          if (audioUrl) URL.revokeObjectURL(audioUrl);
+          audioUrl = URL.createObjectURL(blob);
+          audio.src = audioUrl;
+          download.href = audioUrl;
+          result.classList.add("show");
+          showStatus(`生成しました（${(blob.size / 1024).toFixed(1)} KiB）。`, "info");
+          await audio.play().catch(() => {});
+        } catch (error) {
+          showStatus(`音声生成に失敗しました: ${error.message}`, "error");
+        } finally {
+          submit.disabled = false;
+          submit.textContent = "音声を生成";
+        }
+      });
+
+      window.addEventListener("beforeunload", () => {
+        if (audioUrl) URL.revokeObjectURL(audioUrl);
+      });
+    })();
+  </script>
+</body>
+</html>

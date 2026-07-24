@@ -1,0 +1,35 @@
+services:
+  tts-api:
+    build:
+      context: .
+    environment:
+      TTS_API_TOKEN: ${TTS_API_TOKEN:?set TTS_API_TOKEN in .env}
+      TTS_MAX_CONCURRENCY: ${TTS_MAX_CONCURRENCY:-1}
+      TTS_QUEUE_LIMIT: ${TTS_QUEUE_LIMIT:-8}
+      TTS_TIMEOUT_SEC: ${TTS_TIMEOUT_SEC:-30}
+      RUST_LOG: ${RUST_LOG:-info}
+      TTS_ROOTFS: /opt/tts/rootfs
+      TTS_VOICES_CONFIG: /etc/tts/voices.yaml
+      TTS_WORK_DIR: /tmp/tts
+    volumes:
+      - ./rootfs:/opt/tts/rootfs:ro
+      - ./rootfs/data:/data:ro
+      - ./config:/etc/tts:ro
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp/tts:uid=10001,gid=10001,mode=0700,size=64m
+    mem_limit: 512m
+    cpus: 1.0
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s

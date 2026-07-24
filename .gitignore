@@ -1,0 +1,10 @@
+rootfs/
+analysis/
+*.img
+.env
+target/
+harness/*.o
+harness/tts-harness
+harness/liblog_stub.so
+core
+core.*
