@@ -184,7 +184,7 @@
         voice.disabled = true;
         voice.innerHTML = '<option value="">音声を読み込み中...</option>';
         try {
-          const response = await fetch(`${apiBase}/voices`, {
+          const response = await fetch(`${apiBase}/api/voices`, {
             headers: authorizationHeaders(apiToken)
           });
           if (!response.ok) throw new Error(await errorMessage(response));
@@ -238,7 +238,7 @@
         showStatus("音声を生成しています。", "info");
 
         try {
-          const response = await fetch(`${apiBase}/tts`, {
+          const response = await fetch(`${apiBase}/api/tts`, {
             method: "POST",
             headers: {
               ...authorizationHeaders(token.value.trim()),

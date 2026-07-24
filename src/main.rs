@@ -58,8 +58,8 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/", get(client))
         .route("/healthz", get(api::healthz))
-        .route("/voices", get(api::voices))
-        .route("/tts", post(api::tts))
+        .route("/api/voices", get(api::voices))
+        .route("/api/tts", post(api::tts))
         .layer(DefaultBodyLimit::max(32 * 1024))
         .layer(TraceLayer::new_for_http())
         .layer(middleware::from_fn_with_state(
