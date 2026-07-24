@@ -32,7 +32,7 @@ RUN mkdir -p stub-root/system/lib \
 
 FROM debian:trixie-slim AS runtime
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends qemu-user-static \
+    && apt-get install -y --no-install-recommends qemu-user-static curl \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 tts \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin tts
