@@ -1,5 +1,8 @@
 # ToSpeak TTS API
 
+> [!WARNING]
+> This project is 100% AI Generated. Use at your own risk.
+
 This project runs the Toshiba ToSpeak G3 engine extracted from a privately
 owned storage dump and exposes it through a small authenticated HTTP API.
 The proprietary engine, dictionaries, and Android libraries remain in the
