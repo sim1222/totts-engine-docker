@@ -44,6 +44,9 @@ pub async fn request_context(
 }
 
 fn authorized(request: &Request, expected: &str) -> bool {
+    if expected.is_empty() {
+        return true;
+    }
     let Some(value) = request.headers().get(AUTHORIZATION) else {
         return false;
     };
@@ -237,6 +240,24 @@ pub async fn healthz(State(state): State<AppState>) -> Json<HealthResponse> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn skips_authentication_when_token_is_empty() {
+        let request = Request::new(Body::empty());
+        assert!(authorized(&request, ""));
+    }
+
+    #[test]
+    fn requires_matching_bearer_token_when_configured() {
+        let mut request = Request::new(Body::empty());
+        assert!(!authorized(&request, "secret"));
+
+        request
+            .headers_mut()
+            .insert(AUTHORIZATION, HeaderValue::from_static("Bearer secret"));
+        assert!(authorized(&request, "secret"));
+        assert!(!authorized(&request, "different"));
+    }
 
     #[test]
     fn validates_character_count_and_ranges() {

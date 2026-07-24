@@ -19,10 +19,7 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn from_env() -> Result<Self> {
-        let api_token = env::var("TTS_API_TOKEN").context("TTS_API_TOKEN is required")?;
-        if api_token.is_empty() {
-            bail!("TTS_API_TOKEN must not be empty");
-        }
+        let api_token = env::var("TTS_API_TOKEN").unwrap_or_default();
         let max_concurrency = parse_usize("TTS_MAX_CONCURRENCY", 1)?;
         if max_concurrency == 0 {
             bail!("TTS_MAX_CONCURRENCY must be at least 1");

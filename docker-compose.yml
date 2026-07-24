@@ -3,7 +3,7 @@ services:
     build:
       context: .
     environment:
-      TTS_API_TOKEN: ${TTS_API_TOKEN:?set TTS_API_TOKEN in .env}
+      TTS_API_TOKEN: ${TTS_API_TOKEN:-}
       TTS_MAX_CONCURRENCY: ${TTS_MAX_CONCURRENCY:-1}
       TTS_QUEUE_LIMIT: ${TTS_QUEUE_LIMIT:-8}
       TTS_TIMEOUT_SEC: ${TTS_TIMEOUT_SEC:-30}

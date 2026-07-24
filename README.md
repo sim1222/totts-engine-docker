@@ -20,15 +20,19 @@ Create local configuration and start the service:
 
 ```sh
 cp .env.example .env
-# Replace TTS_API_TOKEN in .env with a strong random secret.
+# Replace TTS_API_TOKEN in .env with a strong random secret,
+# or leave it empty to disable authentication.
 docker compose up --build
 ```
 
-The API listens on `http://localhost:8080`. `/` and `/healthz` are public; all
-API routes require `Authorization: Bearer <TTS_API_TOKEN>`.
+The API listens on `http://localhost:8080`. `/` and `/healthz` are always public.
+When `TTS_API_TOKEN` is non-empty, all other API routes require
+`Authorization: Bearer <TTS_API_TOKEN>`. Authentication is disabled when the
+variable is empty or unset.
 
 A single-file browser client is available at `http://localhost:8080/`. Enter
-the configured API token to load voices, synthesize audio, and save the WAV.
+the configured API token when authentication is enabled, or leave it blank when
+authentication is disabled, to load voices, synthesize audio, and save the WAV.
 
 ```sh
 curl http://localhost:8080/healthz

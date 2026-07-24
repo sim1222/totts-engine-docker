@@ -100,14 +100,14 @@
 
     <form class="card" id="tts-form">
       <div class="field">
-        <label for="token">APIトークン</label>
-        <input id="token" type="password" placeholder="TTS_API_TOKEN" autocomplete="off" required>
+        <label for="token">APIトークン（任意）</label>
+        <input id="token" type="password" placeholder="認証なしの場合は空欄" autocomplete="off">
       </div>
 
       <div class="field">
         <label for="voice">音声</label>
         <select id="voice" required disabled>
-          <option value="">トークンを入力すると読み込みます</option>
+          <option value="">音声を読み込み中...</option>
         </select>
       </div>
 
@@ -140,7 +140,7 @@
           <a class="download" id="download" download="speech.wav">WAVを保存</a>
         </div>
       </div>
-      <p class="hint">トークンは保存されず、このページを閉じると破棄されます。</p>
+      <p class="hint">設定したトークンは保存されず、このページを閉じると破棄されます。</p>
     </form>
   </main>
 
@@ -175,19 +175,17 @@
         }
       };
 
+      const authorizationHeaders = (apiToken) => apiToken
+        ? { Authorization: `Bearer ${apiToken}` }
+        : {};
+
       const loadVoices = async () => {
         const apiToken = token.value.trim();
-        if (!apiToken) {
-          voice.disabled = true;
-          voice.innerHTML = '<option value="">トークンを入力すると読み込みます</option>';
-          return;
-        }
-
         voice.disabled = true;
         voice.innerHTML = '<option value="">音声を読み込み中...</option>';
         try {
           const response = await fetch(`${apiBase}/voices`, {
-            headers: { Authorization: `Bearer ${apiToken}` }
+            headers: authorizationHeaders(apiToken)
           });
           if (!response.ok) throw new Error(await errorMessage(response));
           const body = await response.json();
@@ -243,7 +241,7 @@
           const response = await fetch(`${apiBase}/tts`, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token.value.trim()}`,
+              ...authorizationHeaders(token.value.trim()),
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -276,6 +274,8 @@
       window.addEventListener("beforeunload", () => {
         if (audioUrl) URL.revokeObjectURL(audioUrl);
       });
+
+      loadVoices();
     })();
   </script>
 </body>
