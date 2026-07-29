@@ -277,7 +277,7 @@ mod tests {
             Err(ApiError {
                 kind: ApiErrorKind::InvalidParameter(ref param),
                 ..
-            }) if param == "rate"
+            }) if param == "speaking_rate"
         ));
     }
 }
