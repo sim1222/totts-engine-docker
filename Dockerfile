@@ -1,4 +1,4 @@
-FROM rust:1.97.1-trixie AS rust-builder
+FROM rust:1.98.0-trixie AS rust-builder
 WORKDIR /build
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && printf 'fn main() {}\n' > src/main.rs && cargo build --release && rm -rf src
